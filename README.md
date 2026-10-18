@@ -1,1 +1,1 @@
-# Baltic-Market-NLP
+# Latvian-NLP
