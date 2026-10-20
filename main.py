@@ -4,6 +4,12 @@ from src.information_theory import (
     compute_letter_frequencies,
     evaluate_encoding,
 )
+from src.zipf import (
+    compute_word_frequencies,
+    fit_zipf_power_law,
+    plot_zipf_distribution,
+    extract_core_vocabulary
+)
 
 
 def main():
@@ -25,6 +31,34 @@ def main():
     print(f"Shannon Entropy             : {metrics['shannon_entropy']:.4f} bits/letter")
     print(f"Huffman Average Code Length : {metrics['avg_code_length']:.4f} bits/letter")
     print(f"Encoding Efficiency         : {metrics['efficiency_pct']:.2f}%")
+
+    # Zipf's Law Analysis
+    word_freqs = compute_word_frequencies(words)
+    zipf_metrics = fit_zipf_power_law(word_freqs)
+    plot_path = "data/zipf_distribution.png"
+    plot_zipf_distribution(word_freqs, zipf_metrics, output_path = plot_path)
+
+    print(f"Unique words (Vocabulary Size) : {len(word_freqs):,}")
+    print(f"Fitted Zipf Exponent (s)       : {zipf_metrics['exponent_s']:.4f}")
+    print(f"Log-Log Goodness of Fit (R^2)  : {zipf_metrics['r_squared']:.4f}\n")
+
+    print(f"{'Rank':<8}{'Word':<16}{'Count':<10}{'Percentage':<14}{'r * f'}")
+    print("-"*60)
+    for rank, word, count, pct in word_freqs[:20]:
+        print(f"{rank:<8}{word:<16}{count:<10,}{f'{pct:.4f}%':<14}{rank * count:,}")
+
+    print("-"*60)
+    print(f"Saved Zipf log-log plot to: {plot_path}")
+
+    core_path = "data/core_vocabulary_90.csv"
+    core_metrics = extract_core_vocabulary(word_freqs, target_coverage_pct = 90.0, output_path = core_path)
+
+    print(
+        f"90% Corpus Coverage            : {core_metrics['core_word_count']:,} / {len(word_freqs):,} words "
+        f"({core_metrics['vocab_share_pct']:.2f}% of vocabulary)"
+    )
+    print(f"Exact Cumulative Coverage    : {core_metrics['actual_coverage_pct']:.4f}%")
+    print(f"Saved 90% core vocabulary to : {core_path}")
 
 
 if __name__ == "__main__":
