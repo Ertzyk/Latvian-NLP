@@ -1,4 +1,4 @@
-from src.corpus import load_corpus
+from src.corpus import load_corpus, load_sentences
 from src.information_theory import (
     build_huffman_codes,
     compute_letter_frequencies,
@@ -8,11 +8,13 @@ from src.zipf import (
     compute_word_frequencies,
     fit_zipf_power_law,
     plot_zipf_distribution,
-    extract_core_vocabulary
+    extract_core_vocabulary,
 )
+from src.cooccurrence import extract_top_neighbors
 
 
 def main():
+    # Letter frequencies & Huffman
     words = load_corpus("data/latvian_corpus.txt")
     freqs = compute_letter_frequencies(words)
     codes = build_huffman_codes(freqs)
@@ -60,6 +62,17 @@ def main():
     print(f"Exact Cumulative Coverage    : {core_metrics['actual_coverage_pct']:.4f}%")
     print(f"Saved 90% core vocabulary to : {core_path}")
 
+    # Word Co-occurrence / Neighbors
+    sentences = load_sentences("data/latvian_corpus.txt")
+    neighbors_path = "data/top_100_neighbors.csv"
+    top_neighbors = extract_top_neighbors(sentences, top_n = 100, output_path = neighbors_path)
+
+    print("-"*60)
+    print(f"Saved top 100 words by unique neighbors : {neighbors_path}\n")
+    print(f"{'Rank':<8}{'Word':<18}{'Unique Neighbors'}")
+    print("-"*60)
+    for rank, word, count in top_neighbors[:20]:
+        print(f"{rank:<8}{word:<18}{count:,}")
 
 if __name__ == "__main__":
     main()

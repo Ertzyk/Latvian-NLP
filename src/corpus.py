@@ -13,34 +13,42 @@ def generate_corpus(target_words: int = 100000, output_file: str = "data/latvian
     with open(output_file, "w", encoding = "utf-8") as f:
         for article in dataset:
             raw_text = article["text"].lower()
-            cleaned_text = re.sub(r"[—–]", " ", raw_text)
-            cleaned_text = re.sub(r"[^\w\s\-]", "", cleaned_text)
-            cleaned_text = re.sub(r"[\d_]", "", cleaned_text)
+            raw_sentences = re.split(r"[.!?\n;]+", raw_text)
 
-            raw_words = cleaned_text.split()
+            for sentence in raw_sentences:
+                cleaned = re.sub(r"[—–]", " ", sentence)
+                cleaned = re.sub(r"[^\w\s\-]", "", cleaned)
+                cleaned = re.sub(r"[\d_]", "", cleaned)
 
-            words = []
-            for w in raw_words:
-                w = w.strip("-")
-                if not w:
-                    continue
-                if all((char in latvian_alphabet or char == "-") for char in w):
-                    words.append(w)
+                words = []
+                for w in cleaned.split():
+                    w = w.strip("-")
+                    if not w:
+                        continue
+                    if all((char in latvian_alphabet or char == "-") for char in w):
+                        words.append(w)
 
-            if not words:
-                continue
-
-            f.write("\n".join(words) + "\n")
-            word_count += len(words)
+                if words:
+                    f.write(" ".join(words) + "\n")
+                    word_count += len(words)
 
             if word_count >= target_words:
                 break
 
 
-def load_corpus(filepath: str = "data/latvian_corpus.txt", target_words: int = 200000) -> list[str]:
-    """Loads the corpus from disk, or generates it first if missing."""
+def load_corpus(filepath: str = "data/latvian_corpus.txt", target_words: int = 100000) -> list[str]:
+    """Loads all words as a flat list, generating the corpus first if missing."""
     if not os.path.exists(filepath):
         generate_corpus(target_words = target_words, output_file = filepath)
 
     with open(filepath, "r", encoding = "utf-8") as f:
-        return [line.strip() for line in f if line.strip()]
+        return f.read().split()
+
+
+def load_sentences(filepath: str = "data/latvian_corpus.txt", target_words: int = 100000) -> list[list[str]]:
+    """Loads the corpus as a list of sentences (each sentence is a list of words)."""
+    if not os.path.exists(filepath):
+        generate_corpus(target_words = target_words, output_file = filepath)
+
+    with open(filepath, "r", encoding = "utf-8") as f:
+        return [line.split() for line in f if line.strip()]
